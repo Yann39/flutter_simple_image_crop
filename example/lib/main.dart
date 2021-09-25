@@ -34,7 +34,8 @@ class _MyHomeRouteState extends State<MyHomeRoute> {
   final cropKey = GlobalKey<ImgCropState>();
 
   Future getImage(type) async {
-    var image = await ImagePicker.pickImage(
+    final ImagePicker _picker = ImagePicker();
+    var image = await _picker.pickImage(
         source: type == _sheetType.gallery
             ? ImageSource.gallery
             : ImageSource.camera);

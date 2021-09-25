@@ -30,28 +30,72 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-public final class SimpleImageCropPlugin implements MethodCallHandler, PluginRegistry.RequestPermissionsResultListener {
+public final class SimpleImageCropPlugin implements MethodCallHandler, RequestPermissionsResultListener, FlutterPlugin, ActivityAware {
     private static final int PERMISSION_REQUEST_CODE = 13094;
 
-    private final Activity activity;
+    private Activity activity;
     private Result permissionRequestResult;
     private ExecutorService executor;
+    private MethodChannel channel;
 
-    private SimpleImageCropPlugin(Activity activity) {
-        this.activity = activity;
+    public SimpleImageCropPlugin() {
     }
 
     public static void registerWith(Registrar registrar) {
-        MethodChannel channel = new MethodChannel(registrar.messenger(), "plugins.lykhonis.com/image_crop");
-        SimpleImageCropPlugin instance = new SimpleImageCropPlugin(registrar.activity());
+        final MethodChannel channel = new MethodChannel(registrar.messenger(), "plugins.lykhonis.com/image_crop");
+        final SimpleImageCropPlugin instance = new SimpleImageCropPlugin();
         channel.setMethodCallHandler(instance);
         registrar.addRequestPermissionsResultListener(instance);
+    }
+
+    @Override
+    public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+        // TODO: your plugin is now attached to a Flutter experience.
+        final MethodChannel channel = new MethodChannel(binding.getFlutterEngine().getDartExecutor(), "plugins.lykhonis.com/image_crop");
+        channel.setMethodCallHandler(new SimpleImageCropPlugin());
+    }
+
+    @Override
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        // TODO: your plugin is no longer attached to a Flutter experience.
+        channel.setMethodCallHandler(null);
+    }
+
+    @Override
+    public void onAttachedToActivity(ActivityPluginBinding activityPluginBinding) {
+        // TODO: your plugin is now attached to an Activity
+        this.activity = activityPluginBinding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        // TODO: the Activity your plugin was attached to was
+        // destroyed to change configuration.
+        // This call will be followed by onReattachedToActivityForConfigChanges().
+        this.activity = null;
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding activityPluginBinding) {
+        // TODO: your plugin is now attached to a new Activity
+        // after a configuration change.
+        this.activity = activityPluginBinding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+        // TODO: your plugin is no longer associated with an Activity.
+        // Clean up references.
+        this.activity = null;
     }
 
     @SuppressWarnings("ConstantConditions")
